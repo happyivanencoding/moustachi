@@ -1,0 +1,11 @@
+import path from 'node:path';
+import {StdioServerTransport} from '@modelcontextprotocol/sdk/server/stdio.js';
+import {createMcp} from './mcp.mjs';
+import {MoustachiClient} from './client.mjs';
+import {homePath,readJson} from './util.mjs';
+const args=process.argv.slice(2),arg=(n,f)=>{const i=args.indexOf(n);return i>=0?args[i+1]:f;};
+const home=arg('--home',homePath()),profile=arg('--profile',undefined),config=readJson(path.join(home,'config.json'));
+const clientConfig=config.clients.find(c=>c.id===(profile?`knowledge-${profile}`:'owner'));
+if(!clientConfig)throw new Error('MCP client identity not configured.');
+const client=new MoustachiClient({url:`http://127.0.0.1:${config.port||39178}`,tokenFile:clientConfig.tokenFile,profileId:profile});
+await createMcp(body=>client.call(body.op,body),{allowedOperations:clientConfig.operations,fixedProfile:profile}).connect(new StdioServerTransport());

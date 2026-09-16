@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';import path from 'node:path';import fs from 'node:fs';
+import {Client} from '@modelcontextprotocol/sdk/client/index.js';import {StreamableHTTPClientTransport} from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import {MoustachiClient} from '../src/client.mjs';import {homePath,readJson,writeJson} from '../src/util.mjs';
+const config=readJson(path.join(homePath(),'config.json')),tokenFile=config.clients.find(c=>c.id==='owner').tokenFile;
+const client=new MoustachiClient({tokenFile,profileId:'personal'});
+const mcp=new Client({name:'moustachi-integration-test',version:'0.1.0'});
+await mcp.connect(new StreamableHTTPClientTransport(new URL('http://127.0.0.1:39178/mcp'),{requestInit:{headers:{Authorization:`Bearer ${fs.readFileSync(tokenFile,'utf8').trim()}`}}}));
+const listed=await mcp.listTools();assert(listed.tools.some(t=>t.name==='moustachi_submit'));console.log(JSON.stringify({mcpHandshake:'passed',tools:listed.tools.length}));await mcp.close();
+const submitted=await client.call('submit',{channel:'acceptance',message:'这是一项产品集成测试。请只回复 MOUSTACHI_DIRECT_ACP_OK，不调用工具，不读取文件。'});
+console.log(JSON.stringify({submitted:submitted.id}));
+const first=await client.wait(submitted.id,{timeoutMs:180000});assert.match(first.output,/MOUSTACHI_DIRECT_ACP_OK/);console.log(JSON.stringify({directAcp:'passed',runId:first.id,agentSessionId:first.result.agentSessionId}));
+const next=await client.call('submit',{channel:'acceptance',taskId:first.task_id,message:'继续同一项测试：请只回复 MOUSTACHI_RESUME_OK，不调用工具，不重复上一条回复。'});
+const second=await client.wait(next.id,{timeoutMs:180000});assert.match(second.output,/MOUSTACHI_RESUME_OK/);assert.equal(second.result.agentSessionId,first.result.agentSessionId);assert(!second.output.includes('MOUSTACHI_DIRECT_ACP_OK'));
+const report={mcpHandshake:true,tools:listed.tools.length,directAcp:true,sameTaskResume:true,firstRun:first.id,secondRun:second.id,agentSessionId:first.result.agentSessionId,at:new Date().toISOString()};writeJson(path.join(homePath(),'acceptance','direct-acp.json'),report);console.log(JSON.stringify(report));

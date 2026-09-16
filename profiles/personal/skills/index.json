@@ -1,0 +1,12 @@
+[
+  {
+    "id": "moustachi-history",
+    "description": "Retrieve prior work without loading unbounded transcripts",
+    "path": "history/SKILL.md"
+  },
+  {
+    "id": "moustachi-learning",
+    "description": "Propose reusable skills with evidence, not merely skill reads",
+    "path": "learning/SKILL.md"
+  }
+]

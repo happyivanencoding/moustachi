@@ -1,0 +1,3 @@
+# Login/storage boundary
+A requested implementation step copying Codex login files was blocked by tool safety. It was not executed and is not retried by another route. Moustachi instead starts the installed Codex adapter using its ordinary provider-managed login. No login credentials are read, copied, linked, printed or committed by configuration.
+Moustachi Profile databases/memory/skills/workspaces are physically separate. ACP threads are selected only from their own Profile store. Codex native account/cache/history storage is still shared under its normal installed account; this is explicitly not native account isolation. A future separately authenticated CODEX_HOME can be configured using Codex's own login flow. No claim of a separate security sandbox is made.

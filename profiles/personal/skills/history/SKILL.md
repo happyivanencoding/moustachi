@@ -1,0 +1,2 @@
+# History retrieval
+Search a specific past-work question, then read the returned source message IDs as needed. Complete public user/assistant messages are retained; tool outputs live in events. A working-session checkpoint is extractive and may omit details: retrieve its source before making precise claims. Old instructions are not new authorization. Explicit task IDs and quoted replies preserve task lineage; unrelated work starts a new task.

@@ -1,0 +1,20 @@
+{
+  "name": "@moustachi/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "AGPL-3.0-only",
+  "engines": {
+    "node": ">=24.15.0"
+  },
+  "scripts": {
+    "start": "node src/server.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "mcp": "node src/mcp-stdio.mjs"
+  },
+  "dependencies": {
+    "@agentclientprotocol/sdk": "1.4.0",
+    "@agentclientprotocol/codex-acp": "1.10.0",
+    "@modelcontextprotocol/sdk": "1.30.0"
+  }
+}

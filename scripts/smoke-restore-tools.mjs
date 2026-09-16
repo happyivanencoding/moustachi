@@ -1,0 +1,12 @@
+import fs from 'node:fs';import path from 'node:path';import assert from 'node:assert/strict';
+import {MoustachiClient} from '../src/client.mjs';import {homePath,readJson,writeJson} from '../src/util.mjs';
+const config=readJson(path.join(homePath(),'config.json')),tokenFile=config.clients.find(c=>c.id==='owner').tokenFile,client=new MoustachiClient({tokenFile,profileId:'personal'});
+const before=readJson(path.join(homePath(),'acceptance','direct-acp.json'));const previous=await client.call('get',{runId:before.secondRun});
+const request=await client.call('submit',{taskId:previous.task_id,channel:'acceptance',message:'核心进程已经重启。这是同一任务的恢复测试。只回复 MOUSTACHI_RESTART_RESTORE_OK，不使用工具，不读写文件。'});console.log(JSON.stringify({restoreRun:request.id}));
+const restored=await client.wait(request.id,{timeoutMs:180000});assert.match(restored.output,/MOUSTACHI_RESTART_RESTORE_OK/);assert.equal(restored.result.agentSessionId,before.agentSessionId);console.log(JSON.stringify({nativeRestore:true,runId:restored.id}));
+const toolRequest=await client.call('submit',{channel:'acceptance-computer-tools',message:"产品集成测试，不要修改任何文件：请实际调用 moustachi-knowledge 提供的 moustachi_skills 查看一次技能索引，然后实际调用 runtime 的 exec_command，命令只执行 Write-Output 'MOUSTACHI_COMPUTER_TOOL_OK'。不要用 Codex 自带的 shell 替代此 Runtime 工具测试。完成后告诉我两个工具是否成功及收到的 marker，不要执行其他任务。"});console.log(JSON.stringify({toolRun:toolRequest.id}));
+const tools=await client.wait(toolRequest.id,{timeoutMs:240000,onPending:run=>{console.log(JSON.stringify({pendingPermission:run.id}));}});
+const events=await client.call('history.events',{runId:tools.id,limit:100});
+const toolEvents=events.events.filter(e=>['tool_call','tool_call_update'].includes(e.kind));const recorded=JSON.stringify(toolEvents);
+assert.match(recorded,/MOUSTACHI_COMPUTER_TOOL_OK/);assert.match(recorded,/runtime/i);assert.match(recorded,/moustachi_skills/);
+const report={nativeRestore:true,nativeSessionId:restored.result.agentSessionId,restoreRun:restored.id,computerToolRun:tools.id,computerToolMarkerObserved:true,knowledgeSkillToolObserved:true,at:new Date().toISOString()};writeJson(path.join(homePath(),'acceptance','restore-tools.json'),report);console.log(JSON.stringify(report));

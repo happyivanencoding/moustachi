@@ -1,0 +1,2 @@
+# Evidence-first learning
+Propose class-level reusable skills or durable facts using moustachi_propose with sourceRun. Keep task-specific outputs in results, not core memory. Skill reads do not prove successful reuse. Report reuse only with evidence from a completed prior task; distinct tasks count once each. Two successful reports promote an accepted candidate. Pinned skills stay protected and archived skills are recoverable. Unreviewed proposals are not accepted memory. Batch code using Codex/Runtime, not a second tool runtime.

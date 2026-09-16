@@ -1,0 +1,10 @@
+import fs from 'node:fs';import path from 'node:path';import {randomBytes} from 'node:crypto';import {fileURLToPath} from 'node:url';
+import {homePath,writeJson} from '../src/util.mjs';
+const args=process.argv.slice(2),option=(name,fallback)=>{const i=args.indexOf(name);return i>=0?args[i+1]:fallback;};
+const home=path.resolve(option('--home',homePath())),repo=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+if(fs.existsSync(path.join(home,'config.json')))throw new Error('Configuration already exists; this initializer will not overwrite a live setup.');
+const knowledgeOps=['status','history.search','history.read','memory.read','skills.list','skills.read','propose','skills.report'];
+const clients=[{id:'owner',profiles:['personal'],origins:['owner','maintenance'],operations:['*']},{id:'knowledge-personal',profiles:['personal'],origins:[],operations:knowledgeOps}].map(client=>{const tokenFile=path.join(home,'secrets',client.id);fs.mkdirSync(path.dirname(tokenFile),{recursive:true});fs.writeFileSync(tokenFile,randomBytes(32).toString('base64url'),'utf8');return {...client,tokenFile};});
+const model=option('--model',undefined),definitionFile=path.join(repo,'profiles','personal','profile.json');
+writeJson(path.join(home,'config.json'),{schema:'moustachi.config/v1',port:Number(option('--port',39178)),profiles:{personal:{definitionFile,useExistingCodexLogin:true,codexConfig:{...(model?{model}:{}),model_reasoning_effort:'low'},mcpServers:[]}},clients});
+console.log(JSON.stringify({initialized:true,home,profiles:['personal'],login:'Uses the installed Codex provider login without exporting it.',computerMcp:'Optional; configure profiles.personal.mcpServers when needed.'}));
