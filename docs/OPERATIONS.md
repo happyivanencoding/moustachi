@@ -1,30 +1,64 @@
 # Operations — 2026-09-16
-## Actual deployment
-`Moustachi Core` is a running Windows Task Scheduler service. WScript launches PowerShell with an invisible window, and the runner starts `C:\dev\moustachi\src\server.mjs`. It does not run as a Runtime/AgentDock command-session child. At-logon plus minute recovery triggers use IgnoreNew; no second core should acquire port 39178. Log: `%LOCALAPPDATA%\Moustachi\services\core\service.log`.
 
-`Moustachi WhatsApp` and `Moustachi Onward Ops` are registered **disabled**. The production `Onward WhatsApp Bridge` and `Onward Ops Agent` tasks remain active. Existing WhatsApp uses port 39177 and its original OnwardOps state. Production source remains JPilot repair worktree dc5b94c until a later successful cutover entry explicitly supersedes it.
+## Production authority after cutover
 
-Core config/state: `%LOCALAPPDATA%\Moustachi`. Business config staged at `%LOCALAPPDATA%\MoustachiOnward`. The staged business bridge-token reference is finalized by the unexecuted transport migration; do not enable that worker prematurely.
+Onward production now uses the independent Moustachi stack:
 
-## Acceptance actually completed
-- Core: 12 targeted tests; transport: 12; companion: 9 (33 total before standalone-initializer test is added).
-- Actual MCP HTTP handshake and 15 tools.
-- Native direct ACP answer and same-task continuation.
-- Native session restored after stopping the temporary core and starting the scheduled core.
-- Codex actually called the profile knowledge skill tool and Runtime exec_command, producing the expected marker.
-- New business analytics adapter read real product aggregate successfully.
-Private acceptance records: `acceptance/direct-acp.json`, `acceptance/restore-tools.json` under Moustachi home. No WhatsApp test message was sent.
+- `Moustachi Core`: Enabled/Running on loopback `39178`, source `C:\dev\moustachi\src\server.mjs`.
+- `Moustachi WhatsApp`: Enabled/Running on loopback `39177`, source `C:\dev\moustachi\transport-whatsapp\bridge.mjs`, profile `onward`.
+- `Moustachi Onward Ops`: Enabled periodic worker from `C:\dev\moustachi-onward\src\worker.mjs`; recent no-work cycles exit `0`.
+- Legacy `Onward WhatsApp Bridge`: Disabled.
+- Legacy `Onward Ops Agent`: Disabled.
 
-## Activation gates still open
-Live Onward-origin acceptance was blocked by the tool safety check and was not retried through a different identity/connector. Reading legacy Runtime session metadata was also blocked; original files remain untouched. Login-file copying was blocked earlier and was not performed.
+Core state/config is `%LOCALAPPDATA%\Moustachi`; business config is `%LOCALAPPDATA%\MoustachiOnward`. Runtime is an optional computer MCP provider and no longer owns Moustachi ACP sessions. AgentDock is not a production dependency. The legacy repair worktree `C:\dev\onward-moustachi-recovery-20260916` at `dc5b94c` is retained only as historical/rollback source.
 
-Before cutover, obtain a successful authorized Onward path verification. Then ensure the old worker has no active turn, export existing scheduled-task definitions, disable the two old task schedules, and stop the old bridge. **Never run two Baileys processes against the same auth directory.** Only then run the companion's `scripts/migrate-transport.mjs`, which copies non-login rolling state/receipts, imports known group messages through the core API and references the original provider-owned auth directory. It has not been executed in this task.
+## Cutover evidence
 
-Start the new bridge, verify connected/paired/group/routing, and only then enable the new outbox worker. Verify real claim/complete/release/delivery behavior without manufacturing tester events. Close the obsolete Runtime ACP session only after the new live path is confirmed. Do not delete old code, auth, state or native history before a successful retained rollback period.
+Before stopping legacy services, a real scoped request used client `whatsapp`, profile `onward`, origin `whatsapp`, channel `onward-founders`. It passed Onward profile preparation and direct Codex ACP, returning exactly `MOUSTACHI_ONWARD_ACCEPTANCE_OK` with no tool/state mutation.
 
-The original rolling state most recently contained 27 context messages, 29 processed IDs and 3 outgoing receipts. These counts are observations, NOT a claim they have been migrated. No full old ACP transcript import was completed.
+Rollback material was exported before cutover to `%LOCALAPPDATA%\Moustachi\rollback\cutover-20260916-165213`.
 
-Onward Control's existing observer was not changed/redeployed in this task. Its observation sources must be checked during the later cutover; do not paper over old status by writing a second authority state file. The new bridge preserves the existing 39177 health/send field contracts, but that is not a verified dashboard cutover.
+The legacy worker had no active child process. The legacy WhatsApp schedule was disabled/stopped; its surviving Node child was explicitly stopped before the new transport touched the shared auth directory. `scripts/migrate-transport.mjs` then completed once and wrote `%LOCALAPPDATA%\Moustachi\transports\whatsapp\migration.json`, preserving/importing:
+
+- 27 rolling founders-group context messages;
+- 29 processed message IDs;
+- 3 existing outbound receipts.
+
+The provider-owned WhatsApp auth directory is referenced in place, not copied. Full legacy ACP/Codex history was not imported or deleted.
+
+The new Bridge verified authenticated health with `connected=true`, `paired=true`, `groupConfigured=true`. A real idempotent `/send` smoke delivered the cutover notice and returned WhatsApp message id `3EB0ADEEB06B8F686724A9`. No synthetic tester/outbox record was created. The real outbox had no pending event, and the new worker's direct business API probe plus scheduled no-work cycle succeeded.
+
+No second external human account was available for a live inbound `@Moustachi` during cutover. Trigger/routing is covered by transport tests; the real Onward-origin ACP acceptance plus real WhatsApp connection/outbound send validate both production sides without manufacturing a founder instruction.
+
+## Windows service runner
+
+The generic installer uses invisible WScript -> PowerShell -> Node. PowerShell 5 can promote native stderr to PowerShell ErrorRecords, so generated runners use `$ErrorActionPreference='Continue'` and trust the Node exit code.
+
+`install-windows-service.ps1` now supports `-DiscardOutput`. Use it for `Moustachi WhatsApp`: the current Baileys/libsignal dependency can print Signal session objects directly through `console.*`, bypassing the Bridge's silent Pino logger. Production health is therefore observed through authenticated `/health` plus Task Scheduler. The installed WhatsApp runner already discards raw output.
+
+A pre-mitigation `%LOCALAPPDATA%\Moustachi\services\whatsapp\service.log` remains because local tool safety blocked deletion. It is not an authority and stopped growing after discard-output activation. Do not publish or parse it; remove it through normal local administration when permitted. Do not delete WhatsApp auth/state directories.
+
+## Onward Control
+
+`Onward Control Observer` now reads Moustachi Core/WhatsApp authenticated health and the three new task names rather than old OnwardOps authority. It delivered the new observation successfully. Control release `20260916T172235-moustachi-cutover` is deployed and `onward-control-web-1` is healthy. No Onward V1 product code was deployed.
+
+## Validation baseline
+
+- Core: 13 focused tests.
+- Generic WhatsApp transport: 12 focused tests at cutover baseline.
+- Onward profile/worker: 9 focused tests.
+- Earlier real MCP handshake (15 tools), direct Codex reply, same-task continuation, native restart/resume, knowledge-tool lookup and Runtime exec marker remain accepted.
+
+Private acceptance artifacts live under Moustachi home rather than Git.
 
 ## Rollback
-Currently no rollback is needed: the old production transport/worker were never disabled. If a later migration fails before acceptance, stop/disable the new transport first, then restore/enable the old task definitions. Preserve any new pending messages before discarding a partially activated transport state. Never reset the WhatsApp login to solve an ordinary service-path failure.
+
+The legacy task XML/config/state snapshot remains in the rollback directory above. To roll back:
+
+1. Stop/disable `Moustachi Onward Ops`.
+2. Stop/disable `Moustachi WhatsApp` and ensure its Node child exits.
+3. Ensure port `39177` is free and no Baileys process owns the shared auth directory.
+4. Restore/enable legacy `Onward WhatsApp Bridge` and `Onward Ops Agent` definitions as needed.
+5. Verify legacy authenticated health.
+
+Never reset/copy the WhatsApp login for an ordinary service-path failure. Keep old source/auth/native history through the rollback period.

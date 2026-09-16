@@ -4,7 +4,8 @@ param(
  [Parameter(Mandatory=$true)][string]$WorkingDirectory,
  [Parameter(Mandatory=$true)][string]$ServiceDirectory,
  [string[]]$NodeArguments=@(),
- [switch]$Periodic
+ [switch]$Periodic,
+ [switch]$DiscardOutput
 )
 $ErrorActionPreference='Stop'
 $Entry=(Resolve-Path -LiteralPath $Entry).Path
@@ -14,12 +15,14 @@ $runner=Join-Path $ServiceDirectory 'run.ps1'
 $launcher=Join-Path $ServiceDirectory 'run-hidden.vbs'
 $log=Join-Path $ServiceDirectory 'service.log'
 $quoted=((@($Entry)+$NodeArguments)|ForEach-Object {"'"+$_.Replace("'","''")+"'"}) -join ','
+$outputLine=if($DiscardOutput){"& '$node' @a *> `$null"}else{"& '$node' @a *>> '$log'"}
 $script=@"
-`$ErrorActionPreference='Stop'
+# PowerShell 5 promotes native stderr to ErrorRecords; keep the supervisor alive and trust the child exit code.
+`$ErrorActionPreference='Continue'
 Set-Location -LiteralPath '$($WorkingDirectory.Replace("'","''"))'
 if((Test-Path '$log') -and (Get-Item '$log').Length -gt 5242880){Move-Item '$log' '$log.previous' -Force}
 `$a=@($quoted)
-& '$node' @a *>> '$log'
+$outputLine
 exit `$LASTEXITCODE
 "@
 [IO.File]::WriteAllText($runner,$script,[Text.UTF8Encoding]::new($true))

@@ -3,7 +3,7 @@ A long-lived personal Agent identity with task-scoped Codex ACP working sessions
 
 ## Current delivery: 0.1.0 foundation
 The core is implemented and running locally. Official MCP HTTP handshake, direct native Codex ACP, continued tasks, native session restore across a core restart, progressive skill lookup and a real Runtime computer-tool call have passed integration acceptance.
-**The existing production WhatsApp/Ops bot has NOT been switched.** Its old services remain active. The new generic transport and Onward adapter are implemented/tested, but activation is deliberately gated on authorized live-channel verification. See `DEEP_CONTEXT_HANDOFF.md` and `docs/OPERATIONS.md`; do not infer cutover from files or disabled tasks existing.
+**Onward production is now cut over to the independent Moustachi stack.** `Moustachi Core`, `Moustachi WhatsApp` and `Moustachi Onward Ops` are the active authorities; the legacy `Onward WhatsApp Bridge` and `Onward Ops Agent` schedules are disabled and retained only for rollback. The existing WhatsApp login is referenced in place rather than copied. See `DEEP_CONTEXT_HANDOFF.md` and `docs/OPERATIONS.md` for the cutover evidence and rollback boundary.
 
 ```
 ChatGPT / another client -> Moustachi MCP or API -> Profile -> Task -> ACP -> Codex
