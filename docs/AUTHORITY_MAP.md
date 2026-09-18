@@ -1,6 +1,6 @@
 # Authority and migration baseline — 2026-09-16
 ## Observed before changing anything
-- Policy: `C:\dev\career-ops\DEEP_CONTEXT_HANDOFF_FINAL.md`.
+- Onward policy: `C:\dev\onward\DEEP_CONTEXT_HANDOFF_FINAL.md`.
 - Running JavaScript: `%LOCALAPPDATA%\OnwardOps\bin` and `whatsapp-bridge\app`.
 - Maintained source: JPilot worktree `C:\dev\onward-moustachi-recovery-20260916`, branch `fix/moustachi-auth-recovery-20260916`, commit `dc5b94c`. Its history contains original outbox integration `34ce749`, SSH relay `97be301`, bridge `c65b2ba`, pairing `5b28a63`, rolling context `9c56e6a`, analytics `6bc8e12`, full streamed answer `c8b8f04`, founder policy `a1e33d1`, credentials recovery `dc5b94c`.
 - `C:\dev\onward-v1-mobile-web-20260912` is a latency experiment branch, NOT the source authority merely because it sounds like production.

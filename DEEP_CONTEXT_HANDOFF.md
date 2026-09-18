@@ -1,5 +1,5 @@
 # Moustachi — authoritative repository handoff
-Updated 2026-09-16. Highest project policy remains `C:\dev\career-ops\DEEP_CONTEXT_HANDOFF_FINAL.md`.
+Updated 2026-09-18. Highest Onward project policy is `C:\dev\onward\DEEP_CONTEXT_HANDOFF_FINAL.md`; Moustachi core remains a shared platform rather than an Onward child repository.
 
 ## Read first
 `README.md`, `docs/AUTHORITY_MAP.md`, `docs/ARCHITECTURE.md`, `docs/OPERATIONS.md`, `docs/HERMES_REUSE.md`, `docs/LOGIN_BOUNDARY.md`.
